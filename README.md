@@ -1,0 +1,2 @@
+# MindStep
+Bachelor's thesis
