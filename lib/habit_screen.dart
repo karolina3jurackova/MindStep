@@ -252,7 +252,10 @@ class _HabitScreenState extends State<HabitScreen> {
                   // PLUS BUTTON
                   GestureDetector(
                     onTap: () {
-                      // TODO: pridať novú úlohu
+                      Navigator.pushReplacementNamed(
+                        context,
+                        '/add_new_focus',
+                      );
                     },
                     child: Transform.translate(
                       offset: const Offset(0, -2),

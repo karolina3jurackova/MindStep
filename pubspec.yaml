@@ -70,6 +70,12 @@ flutter:
     - assets/images/egg.png
     - assets/images/communication.png
     - assets/images/habit.png
+    - assets/images/head.png
+    - assets/images/smile.png
+    - assets/images/sad.png
+    - assets/images/neutral.png
+    - assets/images/excited.png
+    - assets/images/reading.PNG
 
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg

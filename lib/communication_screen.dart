@@ -52,7 +52,7 @@ class _CommunicationScreenState extends State<CommunicationScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Transform.translate(
-                        offset: const Offset(-10, 0), // 👈 posun doľava
+                        offset: const Offset(-10, 0),
                         child: GestureDetector(
                           onTap: () {
                             // TODO: spustiť úlohu
@@ -252,7 +252,10 @@ class _CommunicationScreenState extends State<CommunicationScreen> {
                   // PLUS BUTTON
                   GestureDetector(
                     onTap: () {
-                      // TODO: pridať novú úlohu
+                      Navigator.pushReplacementNamed(
+                        context,
+                        '/add_new_focus',
+                      );
                     },
                     child: Transform.translate(
                       offset: const Offset(0, -2),
