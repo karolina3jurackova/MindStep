@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:adv_basics/Shapes/shape_running_focus.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:ui';
 
 class RunningFocus extends StatefulWidget {
   const RunningFocus({super.key});
@@ -46,6 +47,121 @@ class _RunningFocusState extends State<RunningFocus> {
       });
       setState(() => _isRunning = true);
     }
+  }
+
+  void _showMoreTips() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.3),
+      builder: (context) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 36, 20, 32),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFF3DC),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // HANDLE
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD3A06B),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // NADPIS
+                    Text(
+                      'More Tips',
+                      style: GoogleFonts.judson(
+                        color: const Color(0xFF40260A),
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // TIP KARTIČKY
+                    _tipSheetCard('blabla bla bla blablabla bla bla blabla'),
+                    const SizedBox(height: 10),
+                    _tipSheetCard(
+                      'blabla bla bla blablabla bla bla blabla bla bla bla',
+                    ),
+                    const SizedBox(height: 10),
+                    _tipSheetCard(
+                      'blabla bla bla blablabla bla bla blablablab bla bla bla bla bla bla',
+                    ),
+
+                    const SizedBox(height: 2),
+                  ],
+                ),
+              ),
+
+              // DRAK NAD LIŠTOU
+              Positioned(
+                top: -110,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/head.png',
+                    width: 140,
+                    height: 140,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _tipSheetCard(String text) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5E6CC),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFFD3A06B).withValues(alpha: 0.4),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('💡', style: TextStyle(fontSize: 18)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.judson(
+                color: const Color(0xFF6E3E09),
+                fontSize: 15,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   String get _timeDisplay {
@@ -255,9 +371,7 @@ class _RunningFocusState extends State<RunningFocus> {
                         Padding(
                           padding: const EdgeInsets.only(top: 78),
                           child: GestureDetector(
-                            onTap: () {
-                              // TODO -> bude tam pop up s infoškami ktorý bude mať kríž aby sme to mohli vypnúť
-                            },
+                            onTap: _showMoreTips,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 30, vertical: 9),

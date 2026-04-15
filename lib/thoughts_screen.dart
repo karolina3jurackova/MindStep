@@ -178,7 +178,7 @@ class _ThoughtsScreenState extends State<ThoughtsScreen> {
                       "Anything you'd like to note?",
                       style: GoogleFonts.judson(
                         color: const Color(0xFF40260A),
-                        fontSize: 22,
+                        fontSize: 25,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -195,12 +195,14 @@ class _ThoughtsScreenState extends State<ThoughtsScreen> {
                     style: GoogleFonts.judson(
                       color: const Color(0xFF40260A),
                       fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                     decoration: InputDecoration(
                       hintText: 'Write your thoughts...',
                       hintStyle: GoogleFonts.judson(
                         color: const Color.fromARGB(255, 107, 81, 51),
-                        fontSize: 16,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -237,22 +239,22 @@ class _ThoughtsScreenState extends State<ThoughtsScreen> {
                       decoration: BoxDecoration(
                         color: canDone
                             ? const Color.fromARGB(255, 169, 187, 133)
-                            : const Color.fromARGB(255, 157, 174, 116)
-                                .withOpacity(0.4),
+                            : const Color.fromARGB(255, 157, 174, 116),
+
                         borderRadius: BorderRadius.circular(30),
 
                         // 👇 TIEŇ
                         boxShadow: canDone
                             ? [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.15),
-                                  blurRadius: 12,
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  blurRadius: 15,
                                   offset: const Offset(0, 6),
                                 ),
                               ]
                             : [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.08),
+                                  color: Colors.black.withValues(alpha: 0.08),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),
@@ -263,7 +265,7 @@ class _ThoughtsScreenState extends State<ThoughtsScreen> {
                         style: GoogleFonts.judson(
                           color: canDone
                               ? Colors.white
-                              : Colors.white.withOpacity(0.5),
+                              : Colors.white.withValues(alpha: 1),
                           fontSize: 30,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 2,
