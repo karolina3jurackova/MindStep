@@ -1,5 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:adv_basics/Shapes/shape_calendar.dart';
+import 'package:adv_basics/models/daily_entry_model.dart';
+import 'package:adv_basics/services/firestore_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -10,28 +13,24 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
-  DateTime _currentMonth = DateTime(2026, 3);
-  int? _selectedDay = 18;
+  DateTime _currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  int? _selectedDay;
+  late Future<List<DailyEntryModel>> _entriesFuture;
 
-  // TODO: nahradiť reálnymi dátami
-  final Set<int> _activeDays = {3, 8, 10, 14, 15, 17, 18, 20, 22, 24};
+  @override
+  void initState() {
+    super.initState();
+    _entriesFuture = _loadEntries();
+  }
 
-  // TODO: nahradiť reálnymi dátami
-  final Map<int, String> _moodMap = {
-    18: 'happy',
-  };
-
-  // TODO: nahradiť reálnymi dátami
-  final int _happyCount = 12;
-  final int _neutralCount = 4;
-  final int _goodCount = 1;
-  final int _mehCount = 3;
-  final int _activeDaysCount = 12;
+  Future<List<DailyEntryModel>> _loadEntries() => FirestoreService()
+      .getEntriesForMonth(_currentMonth.year, _currentMonth.month);
 
   void _previousMonth() {
     setState(() {
       _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
       _selectedDay = null;
+      _entriesFuture = _loadEntries();
     });
   }
 
@@ -39,23 +38,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
     setState(() {
       _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
       _selectedDay = null;
+      _entriesFuture = _loadEntries();
     });
   }
 
   String get _monthLabel {
     const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December'
+      'Leden',
+      'Únor',
+      'Březen',
+      'Duben',
+      'Květen',
+      'Červen',
+      'Červenec',
+      'Srpen',
+      'Září',
+      'Říjen',
+      'Listopad',
+      'Prosinec'
     ];
     return '${months[_currentMonth.month - 1]} ${_currentMonth.year}';
   }
@@ -70,15 +70,55 @@ class _CalendarScreenState extends State<CalendarScreen> {
     for (int i = 1; i <= daysInMonth; i++) {
       days.add(DateTime(_currentMonth.year, _currentMonth.month, i));
     }
-    while (days.length % 7 != 0) days.add(null);
+    while (days.length % 7 != 0) {
+      days.add(null);
+    }
     return days;
+  }
+
+  String _formatSelectedDate() {
+    if (_selectedDay == null) return '';
+    final date =
+        DateTime(_currentMonth.year, _currentMonth.month, _selectedDay!);
+    const weekdays = [
+      'Pondělí',
+      'Úterý',
+      'Středa',
+      'Čtvrtek',
+      'Pátek',
+      'Sobota',
+      'Neděle'
+    ];
+    const months = [
+      'ledna',
+      'února',
+      'března',
+      'dubna',
+      'května',
+      'června',
+      'července',
+      'srpna',
+      'září',
+      'října',
+      'listopadu',
+      'prosince'
+    ];
+    return '${weekdays[date.weekday - 1]}, $_selectedDay. ${months[date.month - 1]} ${date.year}';
+  }
+
+  Widget _moodStat(String label) {
+    return Text(
+      label,
+      style: GoogleFonts.josefinSans(
+          color: const Color(0xFF6E3E09),
+          fontSize: 14,
+          fontWeight: FontWeight.w600),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final calendarDays = _buildCalendarDays();
-    final selectedHasMood =
-        _selectedDay != null && _moodMap.containsKey(_selectedDay);
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 253, 232, 205),
@@ -88,528 +128,539 @@ class _CalendarScreenState extends State<CalendarScreen> {
           children: [
             SafeArea(
               bottom: false,
-              child: SizedBox.expand(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
-                  child: Column(
-                    children: [
-                      // MONTH SWITCHER
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3DC),
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.06),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            GestureDetector(
-                              onTap: _previousMonth,
-                              child: const Icon(Icons.chevron_left,
-                                  color: Color(0xFF6E3E09), size: 24),
-                            ),
-                            Text(
-                              _monthLabel,
-                              style: GoogleFonts.judson(
-                                color: const Color(0xFF40260A),
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: _nextMonth,
-                              child: const Icon(Icons.chevron_right,
-                                  color: Color(0xFF6E3E09), size: 24),
-                            ),
-                          ],
-                        ),
-                      ),
+              child: FutureBuilder<List<DailyEntryModel>>(
+                future: _entriesFuture,
+                builder: (context, snapshot) {
+                  final entries = snapshot.data ?? [];
 
-                      const SizedBox(height: 16),
+                  // Build lookup: day number → list of all entries that day
+                  final Map<int, List<DailyEntryModel>> dayEntryMap = {};
+                  for (final e in entries) {
+                    final day = int.parse(e.dateKey.split('-')[2]);
+                    dayEntryMap.putIfAbsent(day, () => []).add(e);
+                  }
+                  final activeDays = dayEntryMap.keys.toSet();
 
-                      // KALENDÁR
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3DC),
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.06),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
+                  // Mood counts for the displayed month
+                  final moodCounts = List.filled(4, 0);
+                  for (final e in entries) {
+                    moodCounts[e.moodIndex.clamp(0, 3)]++;
+                  }
+
+                  final selectedEntries =
+                      _selectedDay != null ? (dayEntryMap[_selectedDay] ?? []) : <DailyEntryModel>[];
+
+                  return SizedBox.expand(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
+                      child: Column(
+                        children: [
+                          // MONTH SWITCHER
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF3DC),
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.06),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3))
+                              ],
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            // DNI V TÝŽDNI
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                'Mon',
-                                'Tue',
-                                'Wed',
-                                'Thu',
-                                'Fri',
-                                'Sat',
-                                'Sun'
-                              ]
-                                  .map((d) => SizedBox(
-                                        width: 36,
-                                        child: Text(
-                                          d,
-                                          textAlign: TextAlign.center,
-                                          style: GoogleFonts.josefinSans(
-                                            color: const Color(0xFF9E7A50),
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ))
-                                  .toList(),
+                                GestureDetector(
+                                  onTap: _previousMonth,
+                                  child: const Icon(Icons.chevron_left,
+                                      color: Color(0xFF6E3E09), size: 24),
+                                ),
+                                Text(
+                                  _monthLabel,
+                                  style: GoogleFonts.judson(
+                                      color: const Color(0xFF40260A),
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                GestureDetector(
+                                  onTap: _nextMonth,
+                                  child: const Icon(Icons.chevron_right,
+                                      color: Color(0xFF6E3E09), size: 24),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 5),
+                          ),
 
-                            // DNI
-                            ...List.generate(calendarDays.length ~/ 7, (row) {
-                              return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 2),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: List.generate(7, (col) {
-                                    final day = calendarDays[row * 7 + col];
-                                    if (day == null) {
-                                      return const SizedBox(
-                                          width: 36, height: 36);
-                                    }
-                                    final dayNum = day.day;
-                                    final isSelected = _selectedDay == dayNum;
-                                    final isActive =
-                                        _activeDays.contains(dayNum);
-                                    final isToday =
-                                        day.year == DateTime.now().year &&
-                                            day.month == DateTime.now().month &&
-                                            day.day == DateTime.now().day;
+                          const SizedBox(height: 16),
 
-                                    return GestureDetector(
-                                      onTap: isActive
-                                          ? () => setState(() {
-                                                _selectedDay =
-                                                    _selectedDay == dayNum
-                                                        ? null
-                                                        : dayNum;
-                                              })
-                                          : null,
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                            width: 36,
-                                            height: 36,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: isSelected
-                                                  ? const Color(0xFFD3A06B)
-                                                  : Colors.transparent,
-                                              border: isToday
-                                                  ? Border.all(
-                                                      color: const Color(
-                                                          0xFFD3A06B),
-                                                      width: 1.5)
-                                                  : null,
+                          // KALENDÁR
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF3DC),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.06),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3))
+                              ],
+                            ),
+                            child: GridView.count(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              crossAxisCount: 7,
+                              mainAxisSpacing: 4,
+                              crossAxisSpacing: 4,
+                              childAspectRatio: 1,
+                              children: [
+                                // Day letter headers
+                                ...['P', 'Ú', 'S', 'Č', 'P', 'S', 'N']
+                                    .map((d) => Center(
+                                          child: Text(
+                                            d,
+                                            style: GoogleFonts.josefinSans(
+                                              color: const Color(0xFF9E7A50),
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: 1,
                                             ),
-                                            child: Center(
-                                              child: Text(
-                                                '$dayNum',
-                                                style: GoogleFonts.josefinSans(
-                                                  color: isSelected
-                                                      ? Colors.white
-                                                      : const Color(0xFF40260A),
-                                                  fontSize: 16,
-                                                  fontWeight: isSelected
-                                                      ? FontWeight.w700
-                                                      : FontWeight.w500,
+                                          ),
+                                        )),
+                                // Day cells
+                                ...calendarDays.map((day) {
+                                  if (day == null) return const SizedBox();
+                                  final dayNum = day.day;
+                                  final isSelected = _selectedDay == dayNum;
+                                  final isActive = activeDays.contains(dayNum);
+                                  final isToday =
+                                      day.year == DateTime.now().year &&
+                                          day.month == DateTime.now().month &&
+                                          day.day == DateTime.now().day;
+
+                                  return GestureDetector(
+                                    onTap: isActive
+                                        ? () => setState(() {
+                                              _selectedDay =
+                                                  _selectedDay == dayNum
+                                                      ? null
+                                                      : dayNum;
+                                            })
+                                        : null,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        color: isToday
+                                            ? const Color.fromARGB(
+                                                255, 163, 186, 137)
+                                            : isActive
+                                                ? const Color(0xFFE39A5C)
+                                                    .withValues(
+                                                        alpha: isSelected
+                                                            ? 0.35
+                                                            : 0.18)
+                                                : Colors.transparent,
+                                        border: (!isToday && !isActive)
+                                            ? Border.all(
+                                                color: const Color(0xFFE8D5BC),
+                                                width: 1)
+                                            : null,
+                                      ),
+                                      child: Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          Text(
+                                            '$dayNum',
+                                            style: GoogleFonts.judson(
+                                              color: isToday
+                                                  ? const Color(0xFFFFF8EB)
+                                                  : isActive
+                                                      ? const Color(0xFFC87A3A)
+                                                      : const Color(0xFF6E3E09),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          if (isActive && !isToday)
+                                            Positioned(
+                                              bottom: 4,
+                                              child: Container(
+                                                width: 4,
+                                                height: 4,
+                                                decoration: const BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: Color(0xFFC87A3A),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                          const SizedBox(height: 1),
-                                          Container(
-                                            width: 8,
-                                            height: 8,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: isActive
-                                                  ? const Color(0xFF9DAE7A)
-                                                  : Colors.transparent,
-                                            ),
-                                          ),
                                         ],
                                       ),
-                                    );
-                                  }),
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // MOOD PILULKA
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3DC),
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.06),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _moodStat('$_happyCount Happy'),
-                            _moodStat('$_neutralCount Neutral'),
-                            _moodStat('$_goodCount Good'),
-                            _moodStat('$_mehCount Meh'),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      // STREAK PILULKA
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3DC),
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.06),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset('assets/images/fire.png',
-                                width: 20, height: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              '$_activeDaysCount ${_activeDaysCount == 1 ? 'day' : 'days'} active',
-                              style: GoogleFonts.josefinSans(
-                                color: const Color(0xFF6E3E09),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // DETAIL DŇA
-                      if (_selectedDay != null &&
-                          _activeDays.contains(_selectedDay!)) ...[
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF3DC),
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.06),
-                                blurRadius: 10,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(Icons.calendar_today_outlined,
-                                      size: 16, color: Color(0xFF6E3E09)),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    _formatSelectedDate(),
-                                    style: GoogleFonts.judson(
-                                      color: const Color(0xFF40260A),
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
                                     ),
-                                  ),
+                                  );
+                                }),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // MOOD PILULKA
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF3DC),
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.06),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3))
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _moodStat('${moodCounts[0]} Smutný'),
+                                _moodStat('${moodCounts[1]} Neutrální'),
+                                _moodStat('${moodCounts[2]} Šťastný'),
+                                _moodStat('${moodCounts[3]} Nadšený'),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          // AKTÍVNE DNI PILULKA
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF3DC),
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.06),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3))
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset('assets/images/fire.png',
+                                    width: 20, height: 20),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${activeDays.length} ${activeDays.length == 1 ? 'aktivní den' : 'aktivních dní'}',
+                                  style: GoogleFonts.josefinSans(
+                                      color: const Color(0xFF6E3E09),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // DETAIL DŇA
+                          if (_selectedDay != null &&
+                              selectedEntries.isNotEmpty) ...[
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF3DC),
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color:
+                                          Colors.black.withValues(alpha: 0.06),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 3))
                                 ],
                               ),
-                              const SizedBox(height: 6),
-                              const Divider(
-                                  color: Color(0xFFE8D5B5), thickness: 1),
-                              const SizedBox(height: 8),
-                              if (selectedHasMood) ...[
-                                Row(
-                                  children: [
-                                    Image.asset(
-                                      'assets/images/${_moodMap[_selectedDay!]}.png',
-                                      width: 32,
-                                      height: 32,
-                                      errorBuilder: (_, __, ___) => const Icon(
-                                        Icons.sentiment_satisfied,
-                                        color: Color(0xFFD3A06B),
-                                        size: 32,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'MOOD',
-                                          style: GoogleFonts.josefinSans(
-                                            color: const Color(0xFF9E7A50),
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: 1,
-                                          ),
-                                        ),
-                                        Text(
-                                          _moodMap[_selectedDay!]!
-                                                  .substring(0, 1)
-                                                  .toUpperCase() +
-                                              _moodMap[_selectedDay!]!
-                                                  .substring(1),
-                                          style: GoogleFonts.judson(
-                                            color: const Color(0xFF40260A),
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'I felt more confident today',
-                                  style: GoogleFonts.judson(
-                                    color:
-                                        const Color.fromARGB(255, 116, 90, 59),
-                                    fontSize: 17,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                const Divider(
-                                    color: Color(0xFFE8D5B5), thickness: 1),
-                                const SizedBox(height: 12),
-                              ],
-                              Row(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    width: 28,
-                                    height: 28,
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Color(0xFF9DAE7A),
-                                    ),
-                                    child: const Icon(Icons.check,
-                                        color: Colors.white, size: 16),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                  // DÁTUM
+                                  Row(
                                     children: [
+                                      const Icon(Icons.calendar_today_outlined,
+                                          size: 16, color: Color(0xFF6E3E09)),
+                                      const SizedBox(width: 8),
                                       Text(
-                                        'Habit completed',
+                                        _formatSelectedDate(),
                                         style: GoogleFonts.judson(
-                                          color: const Color(0xFF40260A),
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        'How to learn New Skill',
-                                        style: GoogleFonts.judson(
-                                          color: const Color.fromARGB(
-                                              255, 107, 136, 78),
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                            color: const Color(0xFF40260A),
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold),
                                       ),
                                     ],
                                   ),
+                                  const SizedBox(height: 6),
+                                  const Divider(
+                                      color: Color(0xFFE8D5B5), thickness: 1),
+
+                                  // One block per completed task
+                                  ...selectedEntries.asMap().entries.map((e) {
+                                    final i = e.key;
+                                    final entry = e.value;
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const SizedBox(height: 10),
+
+                                        // MOOD
+                                        Row(
+                                          children: [
+                                            Image.asset(
+                                              'assets/images/${entry.moodAsset}.png',
+                                              width: 32,
+                                              height: 32,
+                                              errorBuilder: (_, __, ___) =>
+                                                  const Icon(
+                                                      Icons.sentiment_satisfied,
+                                                      color: Color(0xFFD3A06B),
+                                                      size: 32),
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'NÁLADA',
+                                                  style: GoogleFonts.josefinSans(
+                                                      color:
+                                                          const Color(0xFF9E7A50),
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      letterSpacing: 1),
+                                                ),
+                                                Text(
+                                                  entry.moodLabel,
+                                                  style: GoogleFonts.judson(
+                                                      color: const Color(
+                                                          0xFF40260A),
+                                                      fontSize: 20,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+
+                                        // POZNÁMKA
+                                        if (entry.note != null &&
+                                            entry.note!.isNotEmpty) ...[
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            entry.note!,
+                                            style: GoogleFonts.judson(
+                                                color: const Color.fromARGB(
+                                                    255, 116, 90, 59),
+                                                fontSize: 17,
+                                                fontStyle: FontStyle.italic),
+                                          ),
+                                        ],
+
+                                        const SizedBox(height: 10),
+
+                                        // TASK
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Container(
+                                              width: 28,
+                                              height: 28,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: entry.category == 'habit'
+                                                    ? const Color(0xFF9DAE7A)
+                                                    : const Color(0xFFD3A06B),
+                                              ),
+                                              child: const Icon(Icons.check,
+                                                  color: Colors.white,
+                                                  size: 16),
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    entry.category == 'habit'
+                                                        ? 'Návyk splněn'
+                                                        : 'Komunikační úkol splněn',
+                                                    style: GoogleFonts.judson(
+                                                        color: const Color(
+                                                            0xFF40260A),
+                                                        fontSize: 17,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                  Text(
+                                                    entry.taskName,
+                                                    style: GoogleFonts.judson(
+                                                        color: entry.category ==
+                                                                'habit'
+                                                            ? const Color
+                                                                .fromARGB(255,
+                                                                107, 136, 78)
+                                                            : const Color(
+                                                                0xFFBF8040),
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.w600),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Row(
+                                                    children: [
+                                                      const Icon(
+                                                          Icons.access_time,
+                                                          size: 14,
+                                                          color:
+                                                              Color(0xFF9E7A50)),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        '${entry.durationMinutes} min',
+                                                        style: GoogleFonts
+                                                            .josefinSans(
+                                                                color: const Color(
+                                                                    0xFF9E7A50),
+                                                                fontSize: 13,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        // Divider between entries (not after last)
+                                        if (i < selectedEntries.length - 1) ...[
+                                          const SizedBox(height: 12),
+                                          const Divider(
+                                              color: Color(0xFFE8D5B5),
+                                              thickness: 1),
+                                        ],
+                                      ],
+                                    );
+                                  }),
+                                  const SizedBox(height: 6),
                                 ],
                               ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                    ],
-                  ),
-                ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+
+                          // LOADING STATE
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: CircularProgressIndicator(
+                                  color: Color(0xFF9DAE7A)),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: _buildNavBar(context),
-            ),
+            _buildNavBar(context),
           ],
         ),
       ),
     );
   }
 
-  String _formatSelectedDate() {
-    if (_selectedDay == null) return '';
-    final date =
-        DateTime(_currentMonth.year, _currentMonth.month, _selectedDay!);
-    const weekdays = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday'
-    ];
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December'
-    ];
-    return '${weekdays[date.weekday - 1]}, $_selectedDay ${months[date.month - 1]}, ${date.year}';
-  }
-
-  Widget _moodStat(String label) {
-    return Text(
-      label,
-      style: GoogleFonts.josefinSans(
-        color: const Color(0xFF6E3E09),
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
+  Widget _navItem(IconData icon, bool isActive, VoidCallback onTap) {
+    const activeColor = Color(0xFFC87A3A);
+    const inkSoft = Color(0xFF9E7A50);
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: isActive
+              ? const Color(0xFFE39A5C).withValues(alpha: 0.14)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(icon, size: 22, color: isActive ? activeColor : inkSoft),
       ),
     );
   }
 
   Widget _buildNavBar(BuildContext context) {
-    const navColor = Color(0xFFFBEED7);
-    const pillColor = Color(0xFFB9B880);
-    const iconColor = Color(0xFF8C6239);
-
     final bottomInset = MediaQuery.of(context).padding.bottom;
-
-    return Container(
-      width: double.infinity,
-      padding:
-          EdgeInsets.fromLTRB(24, 14, 24, bottomInset > 0 ? bottomInset : 18),
-      decoration: BoxDecoration(
-        color: navColor.withValues(alpha: 0.81),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(28),
-          topRight: Radius.circular(28),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pushReplacementNamed(context, '/home'),
-            child: const Icon(
-              Icons.home_outlined,
-              color: iconColor,
-              size: 28,
+    final bottom = bottomInset > 0 ? bottomInset : 22.0;
+    return Positioned(
+      left: 16,
+      right: 16,
+      bottom: bottom,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            height: 66,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.82),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                  color: const Color(0xFFE8D5BC).withValues(alpha: 0.5),
+                  width: 1),
+              boxShadow: [
+                BoxShadow(
+                    color: const Color(0xFF2C1E0C).withValues(alpha: 0.08),
+                    blurRadius: 30,
+                    offset: const Offset(0, 8)),
+                BoxShadow(
+                    color: const Color(0xFF2C1E0C).withValues(alpha: 0.04),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2)),
+              ],
             ),
-          ),
-          GestureDetector(
-            onTap: () => Navigator.pushReplacementNamed(context, '/statistic'),
-            child: const Icon(
-              Icons.bar_chart,
-              color: iconColor,
-              size: 28,
-            ),
-          ),
-          GestureDetector(
-            onTap: () {},
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: pillColor,
-                borderRadius: BorderRadius.circular(24),
-              ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Icon(
-                    Icons.calendar_month,
-                    color: navColor.withValues(alpha: 0.81),
-                    size: 22,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Calendar',
-                    style: GoogleFonts.josefinSans(
-                      color: navColor.withValues(alpha: 0.81),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  _navItem(Icons.home_outlined, false,
+                      () => Navigator.pushReplacementNamed(context, '/home')),
+                  _navItem(Icons.calendar_month_outlined, true, () {}),
+                  _navItem(
+                      Icons.bar_chart,
+                      false,
+                      () => Navigator.pushReplacementNamed(
+                          context, '/statistic')),
+                  _navItem(
+                      Icons.settings_outlined,
+                      false,
+                      () =>
+                          Navigator.pushReplacementNamed(context, '/settings')),
                 ],
               ),
             ),
           ),
-          GestureDetector(
-            onTap: () => Navigator.pushReplacementNamed(context, '/settings'),
-            child: const Icon(
-              Icons.settings_outlined,
-              color: iconColor,
-              size: 28,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

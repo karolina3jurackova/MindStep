@@ -5,90 +5,84 @@ class ShapeRunningFocus extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final double w = size.width;
     final double h = size.height;
+    final double bottom = h + 2; // bleed 2px to eliminate any gap at the edge
 
-    // Pozadie
+    // Background
     canvas.drawRect(
-      Rect.fromLTWH(0, 0, w, h),
+      Rect.fromLTWH(0, 0, w, bottom),
       Paint()..color = const Color.fromARGB(255, 248, 221, 183),
     );
 
-    // =========================
-    // SVETLÝ TVAR - väčší, vyššie
-    // =========================
+    // Light wave — starts lower so it stays near the bottom
     final Paint lightPaint = Paint()
       ..color = const Color(0xFFF2B579).withValues(alpha: 0.30)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
 
-    final double offsetY = -h * 0.13;
-
     final Path lightPath = Path()
-      ..moveTo(0, h)
-      ..lineTo(0, h * 0.64)
+      ..moveTo(0, bottom)
+      ..lineTo(0, h * 0.72)
       ..cubicTo(
         w * 0.06,
-        h * 0.62 + offsetY,
+        h * 0.70,
         w * 0.15,
-        h * 0.63 + offsetY,
+        h * 0.71,
         w * 0.28,
-        h * 0.65 + offsetY,
+        h * 0.73,
       )
       ..cubicTo(
         w * 0.42,
-        h * 0.67 + offsetY,
+        h * 0.75,
         w * 0.50,
-        h * 0.70 + offsetY, // 👈 menej hlboké
+        h * 0.78,
         w * 0.62,
-        h * 0.69 + offsetY,
+        h * 0.76,
       )
       ..cubicTo(
         w * 0.78,
-        h * 0.67 + offsetY,
+        h * 0.73,
         w * 0.90,
-        h * 0.54 + offsetY,
+        h * 0.62,
         w,
-        h * 0.36 + offsetY,
+        h * 0.50,
       )
-      ..lineTo(w, h)
+      ..lineTo(w, bottom)
       ..close();
 
     canvas.drawPath(lightPath, lightPaint);
 
-    // =========================
-    // TMAVÝ TVAR - menší, nižšie
-    // =========================
+    // Dark wave — slightly below the light wave
     final Paint darkPaint = Paint()
-      ..color = const Color(0xFFE5AB6E).withValues(alpha: 1.3)
+      ..color = const Color(0xFFE5AB6E).withValues(alpha: 1.0)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-    ;
 
     final Path darkPath = Path()
-      ..moveTo(0, h)
-      ..lineTo(0, h * 0.79)
+      ..moveTo(0, bottom)
+      ..lineTo(0, h * 0.91)
       ..cubicTo(
         w * 0.06,
-        h * 0.64,
+        h * 0.72,
         w * 0.15,
-        h * 0.65,
+        h * 0.73,
         w * 0.28,
-        h * 0.68,
+        h * 0.76,
       )
       ..cubicTo(
         w * 0.42,
-        h * 0.72,
-        w * 0.50,
-        h * 0.82,
-        w * 0.62,
         h * 0.80,
+        w * 0.50,
+        h * 0.88,
+        w * 0.62,
+        h * 0.86,
       )
       ..cubicTo(
         w * 0.78,
-        h * 0.76,
+        h * 0.82,
         w * 0.90,
-        h * 0.56,
+        h * 0.66,
         w,
-        h * 0.36,
+        h * 0.52,
       )
-      ..lineTo(w, h)
+      ..lineTo(w, bottom)
       ..close();
 
     canvas.drawPath(darkPath, darkPaint);

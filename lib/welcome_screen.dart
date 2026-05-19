@@ -92,10 +92,10 @@ class WelcomeScreen extends StatelessWidget {
                       width: 270,
                     ),
                     Text(
-                      'WELCOME TO',
+                      'TVŮJ MALÝ KROK',
                       style: GoogleFonts.josefinSans(
                         color: const Color(0xFF40260A),
-                        fontSize: 22,
+                        fontSize: 20,
                         fontWeight: FontWeight.w300,
                         letterSpacing: 2,
                         height: 0.65,
@@ -128,7 +128,7 @@ class WelcomeScreen extends StatelessWidget {
                         shadowColor: Colors.black.withValues(alpha: 0.2),
                       ),
                       child: Text(
-                        'LOGIN',
+                        'PŘIHLÁSIT SE',
                         style: GoogleFonts.josefinSans(
                           color: const Color(0xFFFDF3E2),
                           fontSize: 20,
@@ -151,7 +151,7 @@ class WelcomeScreen extends StatelessWidget {
                 Navigator.of(context).pushNamed('/register');
               },
               child: Text(
-                'SIGN UP >',
+                'REGISTRACE >',
                 style: GoogleFonts.josefinSans(
                   color: const Color(0xFF40260A),
                   fontSize: 18,

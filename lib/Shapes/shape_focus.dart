@@ -57,14 +57,12 @@ class ShapeFocus extends CustomPainter {
     final double cardLeft = 0;
     final double cardTop = h * 0.20;
     final double cardWidth = w;
-    final double cardHeight = h * 0.78;
+    final double cardHeight = h - cardTop;
 
     final RRect card = RRect.fromRectAndCorners(
       Rect.fromLTWH(cardLeft, cardTop, cardWidth, cardHeight),
       topLeft: const Radius.circular(42),
       topRight: const Radius.circular(42),
-      bottomLeft: const Radius.circular(42),
-      bottomRight: const Radius.circular(42),
     );
 
     // tieň karty
