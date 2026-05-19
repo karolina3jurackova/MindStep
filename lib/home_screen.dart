@@ -352,7 +352,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFocusCard(BuildContext context) {
     if (_latestEntry == null) {
       return Container(
-        clipBehavior: Clip.hardEdge,
+        clipBehavior: Clip.none,
         decoration: BoxDecoration(
           color: const Color(0xFFFDF3E2),
           borderRadius: BorderRadius.circular(24),
@@ -444,7 +444,7 @@ class _HomeScreenState extends State<HomeScreen> {
         : const Color(0xFFD3A06B);
 
     return Container(
-      clipBehavior: Clip.hardEdge,
+      clipBehavior: Clip.none,
       decoration: BoxDecoration(
         color: const Color(0xFFFDF3E2),
         borderRadius: BorderRadius.circular(24),
@@ -511,6 +511,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   GestureDetector(
                     onTap: () => Navigator.pushReplacementNamed(context, route),
                     child: Container(
+                      width: double.infinity,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 8,
@@ -520,7 +521,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             card.isToday ? 'Zobrazit úkoly' : 'Pokračovat',
@@ -543,8 +544,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            const SizedBox(width: 12),
-            _dragonWidget(),
+            const SizedBox(width: 4),
+            SizedBox(
+              width: 130,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: _dragonWidget(),
+              ),
+            ),
           ],
         ),
       ),
@@ -663,66 +670,70 @@ class _HomeScreenState extends State<HomeScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      greeting,
-                                      style: GoogleFonts.judson(
-                                        color: const Color.fromARGB(
-                                          255,
-                                          104,
-                                          55,
-                                          4,
-                                        ),
-                                        fontSize: 36,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      formattedDate,
-                                      style: GoogleFonts.judson(
-                                        color: const Color(0xFF6E3E09),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 14,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFECB47C)
-                                            .withValues(alpha: 0.32),
-                                        border: Border.all(
-                                          color: const Color(0xFFFE9848),
-                                          width: 2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Image.asset(
-                                            'assets/images/fire.png',
-                                            width: 25,
-                                            height: 20,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        greeting,
+                                        style: GoogleFonts.judson(
+                                          color: const Color.fromARGB(
+                                            255,
+                                            104,
+                                            55,
+                                            4,
                                           ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            streakLabel,
-                                            style: GoogleFonts.josefinSans(
-                                              color: const Color(0xFF6E3E09),
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        formattedDate,
+                                        style: GoogleFonts.judson(
+                                          color: const Color(0xFF6E3E09),
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 14, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFECB47C)
+                                              .withValues(alpha: 0.32),
+                                          border: Border.all(
+                                            color: const Color(0xFFFE9848),
+                                            width: 2,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Image.asset(
+                                              'assets/images/fire.png',
+                                              width: 25,
+                                              height: 20,
                                             ),
-                                          ),
-                                        ],
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              streakLabel,
+                                              style: GoogleFonts.josefinSans(
+                                                color: const Color(0xFF6E3E09),
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
+                                const SizedBox(width: 12),
                                 GestureDetector(
                                   onTap: () => Navigator.pushReplacementNamed(
                                     context,
